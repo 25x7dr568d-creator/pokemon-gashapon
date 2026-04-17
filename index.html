@@ -790,6 +790,47 @@ body {
   opacity: 0.4;
 }
 
+/* === 圖鑑篩選 Tab === */
+.dex-filter {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: white;
+  border-radius: 20px;
+  border: 3px solid var(--pika-yellow);
+}
+.dex-filter-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: 3px solid #DDD;
+  border-radius: 16px;
+  background: white;
+  color: var(--text-light);
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.dex-filter-btn.active {
+  background: var(--pb-red);
+  border-color: var(--pb-red);
+  color: white;
+  box-shadow: 0 3px 8px rgba(238,21,21,0.3);
+}
+.dex-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text-light);
+}
+.dex-empty.celebrate {
+  color: var(--pb-red-deep);
+}
+
 /* === 圖鑑分頁按鈕 === */
 .dex-pager {
   display: flex;
@@ -946,6 +987,11 @@ body {
   <div class="dex-header">
     <div class="dex-title"><img class="dex-title-icon" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" alt="皮卡丘">寶可夢圖鑑</div>
     <div class="dex-progress" id="dexProgress">0 / 151</div>
+  </div>
+  <div class="dex-filter">
+    <button class="dex-filter-btn active" id="filterAll" onclick="setDexFilter('all')">全部</button>
+    <button class="dex-filter-btn" id="filterCaught" onclick="setDexFilter('caught')">已收服</button>
+    <button class="dex-filter-btn" id="filterLocked" onclick="setDexFilter('locked')">還沒抽到</button>
   </div>
   <div class="dex-grid" id="dexGrid"></div>
   <div class="dex-pager">
@@ -1221,45 +1267,68 @@ function renderTodayPartner() {
   nameEl.textContent = '轉一次就有囉！';
 }
 
-// 圖鑑分頁
-var DEX_PAGE_SIZE = 12;  // 每頁 12 隻（3x4）
+// 圖鑑分頁 + 篩選
+var DEX_PAGE_SIZE = 12;
 var dexCurrentPage = 0;
+var dexFilter = 'all';  // 'all' | 'caught' | 'locked'
 
-function totalDexPages() {
-  return Math.ceil(POKEMON.length / DEX_PAGE_SIZE);
+function getFilteredPokemon() {
+  if (dexFilter === 'caught') {
+    return POKEMON.filter(function(p) { return state.caught.indexOf(p.id) !== -1; });
+  }
+  if (dexFilter === 'locked') {
+    return POKEMON.filter(function(p) { return state.caught.indexOf(p.id) === -1; });
+  }
+  return POKEMON;
+}
+
+function setDexFilter(filter) {
+  dexFilter = filter;
+  dexCurrentPage = 0;
+  // 更新 Tab 按鈕樣式
+  document.getElementById('filterAll').classList.toggle('active', filter === 'all');
+  document.getElementById('filterCaught').classList.toggle('active', filter === 'caught');
+  document.getElementById('filterLocked').classList.toggle('active', filter === 'locked');
+  renderDex();
 }
 
 function renderDex() {
   var grid = document.getElementById('dexGrid');
-  var html = '';
-  var total = totalDexPages();
+  var list = getFilteredPokemon();
+  var total = Math.max(1, Math.ceil(list.length / DEX_PAGE_SIZE));
   if (dexCurrentPage >= total) dexCurrentPage = total - 1;
   if (dexCurrentPage < 0) dexCurrentPage = 0;
 
-  var start = dexCurrentPage * DEX_PAGE_SIZE;
-  var end = Math.min(start + DEX_PAGE_SIZE, POKEMON.length);
-
-  for (var i = start; i < end; i++) {
-    var p = POKEMON[i];
-    var caught = state.caught.indexOf(p.id) !== -1;
-    html += '<div class="dex-cell ' + (caught ? 'caught' : 'locked') + '" onclick="showDexDetail(' + p.id + ')">';
-    html += '<div class="dex-num">#' + String(p.id).padStart(3, '0') + '</div>';
-    html += '<img src="' + getPokemonImg(p.id) + '" alt="" loading="lazy">';
-    html += '<div class="dex-name">' + p.name + '</div>';
-    html += '</div>';
+  var html = '';
+  if (list.length === 0) {
+    if (dexFilter === 'caught') {
+      html = '<div class="dex-empty">還沒有收服的寶可夢<br>去轉扭蛋吧！</div>';
+    } else if (dexFilter === 'locked') {
+      html = '<div class="dex-empty celebrate">🎉 全部都收服啦！<br>好厲害！</div>';
+    }
+  } else {
+    var start = dexCurrentPage * DEX_PAGE_SIZE;
+    var end = Math.min(start + DEX_PAGE_SIZE, list.length);
+    for (var i = start; i < end; i++) {
+      var p = list[i];
+      var caught = state.caught.indexOf(p.id) !== -1;
+      html += '<div class="dex-cell ' + (caught ? 'caught' : 'locked') + '" onclick="showDexDetail(' + p.id + ')">';
+      html += '<div class="dex-num">#' + String(p.id).padStart(3, '0') + '</div>';
+      html += '<img src="' + getPokemonImg(p.id) + '" alt="" loading="lazy">';
+      html += '<div class="dex-name">' + p.name + '</div>';
+      html += '</div>';
+    }
   }
   grid.innerHTML = html;
 
-  // 分頁資訊 + 按鈕狀態
   document.getElementById('dexPagerInfo').textContent = (dexCurrentPage + 1) + ' / ' + total;
   document.getElementById('dexPrevBtn').disabled = dexCurrentPage === 0;
-  document.getElementById('dexNextBtn').disabled = dexCurrentPage >= total - 1;
+  document.getElementById('dexNextBtn').disabled = dexCurrentPage >= total - 1 || list.length === 0;
 }
 
 function changeDexPage(delta) {
   dexCurrentPage += delta;
   renderDex();
-  // 捲到圖鑑頂端
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
