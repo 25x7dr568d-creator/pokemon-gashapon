@@ -803,15 +803,16 @@ body {
 }
 .dex-filter-btn {
   flex: 1;
-  padding: 10px 8px;
+  padding: 10px 4px;
   border: 3px solid #DDD;
   border-radius: 16px;
   background: white;
   color: var(--text-light);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 .dex-filter-btn.active {
   background: var(--pb-red);
@@ -991,7 +992,7 @@ body {
   <div class="dex-filter">
     <button class="dex-filter-btn active" id="filterAll" onclick="setDexFilter('all')">全部</button>
     <button class="dex-filter-btn" id="filterCaught" onclick="setDexFilter('caught')">已收服</button>
-    <button class="dex-filter-btn" id="filterLocked" onclick="setDexFilter('locked')">還沒抽到</button>
+    <button class="dex-filter-btn" id="filterPreview" onclick="setDexFilter('preview')">大百科</button>
   </div>
   <div class="dex-grid" id="dexGrid"></div>
   <div class="dex-pager">
@@ -1276,9 +1277,7 @@ function getFilteredPokemon() {
   if (dexFilter === 'caught') {
     return POKEMON.filter(function(p) { return state.caught.indexOf(p.id) !== -1; });
   }
-  if (dexFilter === 'locked') {
-    return POKEMON.filter(function(p) { return state.caught.indexOf(p.id) === -1; });
-  }
+  // 'all' 和 'preview' 都回傳全部 151 隻，差別在顯示方式
   return POKEMON;
 }
 
@@ -1288,7 +1287,7 @@ function setDexFilter(filter) {
   // 更新 Tab 按鈕樣式
   document.getElementById('filterAll').classList.toggle('active', filter === 'all');
   document.getElementById('filterCaught').classList.toggle('active', filter === 'caught');
-  document.getElementById('filterLocked').classList.toggle('active', filter === 'locked');
+  document.getElementById('filterPreview').classList.toggle('active', filter === 'preview');
   renderDex();
 }
 
@@ -1303,8 +1302,6 @@ function renderDex() {
   if (list.length === 0) {
     if (dexFilter === 'caught') {
       html = '<div class="dex-empty">還沒有收服的寶可夢<br>去轉扭蛋吧！</div>';
-    } else if (dexFilter === 'locked') {
-      html = '<div class="dex-empty celebrate">🎉 全部都收服啦！<br>好厲害！</div>';
     }
   } else {
     var start = dexCurrentPage * DEX_PAGE_SIZE;
@@ -1312,7 +1309,9 @@ function renderDex() {
     for (var i = start; i < end; i++) {
       var p = list[i];
       var caught = state.caught.indexOf(p.id) !== -1;
-      html += '<div class="dex-cell ' + (caught ? 'caught' : 'locked') + '" onclick="showDexDetail(' + p.id + ')">';
+      // 大百科模式：全部顯示彩色（當作 caught）
+      var showAsCaught = caught || dexFilter === 'preview';
+      html += '<div class="dex-cell ' + (showAsCaught ? 'caught' : 'locked') + '" onclick="showDexDetail(' + p.id + ')">';
       html += '<div class="dex-num">#' + String(p.id).padStart(3, '0') + '</div>';
       html += '<img src="' + getPokemonImg(p.id) + '" alt="" loading="lazy">';
       html += '<div class="dex-name">' + p.name + '</div>';
@@ -1334,7 +1333,8 @@ function changeDexPage(delta) {
 
 function showDexDetail(id) {
   var caught = state.caught.indexOf(id) !== -1;
-  if (!caught) return;
+  // 大百科模式下未收服也能看；其他模式只有收服過才能點開
+  if (!caught && dexFilter !== 'preview') return;
   var p = POKEMON.find(function(x){ return x.id === id; });
   if (!p) return;
   showResult(p, false);
