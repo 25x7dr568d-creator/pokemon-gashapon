@@ -695,17 +695,29 @@ body {
   background: white;
   border: 4px solid var(--pb-red);
   border-radius: 20px;
-  padding: 14px 20px;
+  padding: 16px 20px;
   margin-bottom: 14px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  gap: 6px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 .dex-title {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 900;
   color: var(--pb-red-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: 2px;
+}
+.dex-title-icon {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
 }
 .dex-progress {
   font-size: 20px;
@@ -932,7 +944,7 @@ body {
 <!-- 圖鑑頁 -->
 <div class="dex-page" id="dexPage">
   <div class="dex-header">
-    <div class="dex-title">🔴 寶可夢圖鑑</div>
+    <div class="dex-title"><img class="dex-title-icon" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" alt="皮卡丘">寶可夢圖鑑</div>
     <div class="dex-progress" id="dexProgress">0 / 151</div>
   </div>
   <div class="dex-grid" id="dexGrid"></div>
