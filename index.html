@@ -125,33 +125,36 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
   margin-bottom: 12px;
-  padding: 0 10px;
+  padding: 0 8px;
   z-index: 10;
 }
 .nav-btn {
-  padding: 10px 18px;
-  border-radius: 22px;
+  padding: 9px 12px;
+  border-radius: 20px;
   background: rgba(255,255,255,0.85);
   border: 3px solid var(--pb-red);
   color: var(--pb-red-deep);
   font-weight: 800;
-  font-size: 18px;
+  font-size: 15px;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  white-space: nowrap;
 }
 .nav-btn.active {
   background: var(--pb-red);
   color: white;
 }
 .collection-count {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 900;
   color: var(--pb-red-deep);
   background: white;
-  padding: 8px 16px;
-  border-radius: 22px;
+  padding: 7px 12px;
+  border-radius: 20px;
   border: 3px solid var(--pika-yellow);
+  white-space: nowrap;
 }
 
 /* === 標題區 === */
@@ -943,7 +946,7 @@ body {
 <div class="top-nav">
   <button class="nav-btn active" id="navHome" onclick="showPage('home')">🎰 扭蛋</button>
   <div class="collection-count" id="collectionCount">已收服 0 / 151</div>
-  <button class="nav-btn" id="navDex" onclick="showPage('dex')">📖 我的圖鑑</button>
+  <button class="nav-btn" id="navDex" onclick="showPage('dex')">📖 圖鑑</button>
 </div>
 
 <!-- 首頁 -->
