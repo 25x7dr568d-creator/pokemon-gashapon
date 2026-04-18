@@ -654,6 +654,10 @@ body {
   color: var(--pb-dark);
   animation: glowPulse 1s ease-in-out infinite;
 }
+.result-badge.locked {
+  background: linear-gradient(90deg, #8FA9CE, #6B8AB8);
+  color: white;
+}
 
 .btn-retry {
   display: block;
@@ -1197,6 +1201,38 @@ var DIALOGUES_OLD = [
   '可以摸摸我嗎？我想撒嬌～',
   '我們已經是老朋友了！'
 ];
+var DIALOGUES_LOCKED = [
+  '快來抓我吧～',
+  '我在等你喔！',
+  '什麼時候才要遇到我呀？',
+  '我躲在草叢裡等你～',
+  '快找到我吧！',
+  '我好想認識你喔～',
+  '轉扭蛋會遇到我嗎？',
+  '我在這裡等你好久了～',
+  '拜託～快把我抓走！',
+  '我超想加入你的隊伍！',
+  '我還沒跟你玩過耶～',
+  '嘿嘿～我在某個地方偷偷看你！',
+  '你快點轉出我嘛～',
+  '再多轉幾次就會抓到我了！',
+  '我是誰呢？抓到就知道！',
+  '偷偷告訴你～我很好抓喔！',
+  '我好羨慕別的寶可夢被抓走～',
+  '下次就是我了吧？',
+  '我在想你耶～',
+  '再試一次！說不定就是我～',
+  '拜託選我！我超會陪你玩！',
+  '我準備好了～就差你一個！',
+  '聽說你很厲害？我想跟你玩！',
+  '快把我從草叢拉出來～',
+  '我每天都在這裡等你！',
+  '會不會今天就是我？',
+  '好期待遇到你喔～',
+  '我很特別喔～抓到就知道！',
+  '別忘了我喔～',
+  '下次轉到我要記得打招呼！'
+];
 
 // localStorage Key
 var STORAGE_KEY = 'pokemon-gashapon-v1';
@@ -1340,7 +1376,7 @@ function showDexDetail(id) {
   if (!caught && dexFilter !== 'preview') return;
   var p = POKEMON.find(function(x){ return x.id === id; });
   if (!p) return;
-  showResult(p, false);
+  showResult(p, caught ? 'caught' : 'locked');
 }
 
 // ============ 頁面切換 ============
@@ -1428,7 +1464,7 @@ function openCapsule() {
     state.totalTwists++;
     saveState();
 
-    showResult(currentPick, isNewCatch);
+    showResult(currentPick, isNewCatch ? 'new' : 'caught');
     renderCollectionCount();
     renderTodayPartner();
 
@@ -1436,25 +1472,47 @@ function openCapsule() {
   }, 800);
 }
 
-function showResult(pokemon, isNew) {
+var lastDialogueIdx = { new: -1, caught: -1, locked: -1 };
+function pickDialogue(status) {
+  var pool = status === 'new' ? DIALOGUES_NEW
+           : status === 'locked' ? DIALOGUES_LOCKED
+           : DIALOGUES_OLD;
+  var idx;
+  if (pool.length <= 1) {
+    idx = 0;
+  } else {
+    do { idx = Math.floor(Math.random() * pool.length); }
+    while (idx === lastDialogueIdx[status]);
+  }
+  lastDialogueIdx[status] = idx;
+  return pool[idx];
+}
+
+function showResult(pokemon, status) {
+  // 相容舊呼叫（boolean）：true → 'new', false → 'caught'
+  if (status === true) status = 'new';
+  else if (status === false) status = 'caught';
+
   var char = document.getElementById('resultChar');
   char.src = getPokemonImg(pokemon.id);
-  char.classList.toggle('new-catch', isNew);
+  char.classList.toggle('new-catch', status === 'new');
 
   document.getElementById('resultNumber').textContent = 'No. ' + String(pokemon.id).padStart(3, '0');
   document.getElementById('resultName').textContent = pokemon.name;
 
   var badge = document.getElementById('resultBadge');
-  if (isNew) {
+  badge.classList.remove('new', 'locked');
+  if (status === 'new') {
     badge.textContent = '✨ 新收集！';
     badge.classList.add('new');
+  } else if (status === 'locked') {
+    badge.textContent = '🔍 還沒遇到';
+    badge.classList.add('locked');
   } else {
     badge.textContent = '圖鑑已擁有';
-    badge.classList.remove('new');
   }
 
-  var dialogues = isNew ? DIALOGUES_NEW : DIALOGUES_OLD;
-  document.getElementById('resultDialogue').textContent = dialogues[Math.floor(Math.random() * dialogues.length)];
+  document.getElementById('resultDialogue').textContent = pickDialogue(status);
 
   document.getElementById('resultCard').classList.add('active');
 }
